@@ -20,7 +20,7 @@ public:
 	bool IsOpen() { return m_bOpen; }
 
 	void Connect(const char* server_ip, uint16_t server_port, uint32_t serv_idx);
-	virtual void Clese();
+	virtual void Close();
 
 	virtual void OnConfirm();
 	virtual void OnClose();
