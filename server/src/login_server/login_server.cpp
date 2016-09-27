@@ -90,10 +90,10 @@ int main(int argc, char* argv[])
     uint16_t http_port = atoi(str_http_port);
     strMsfsUrl = str_msfs_url;
     strDiscovery = str_discovery;
-    
-    
+
+
     pIpParser = new IpParser();
-    
+
 	int ret = netlib_init();
 
 	if (ret == NETLIB_ERROR)
@@ -111,14 +111,14 @@ int main(int argc, char* argv[])
 		if (ret == NETLIB_ERROR)
 			return ret;
 	}
-    
+
     CStrExplode http_listen_ip_list(http_listen_ip, ';');
     for (uint32_t i = 0; i < http_listen_ip_list.GetItemCnt(); i++) {
         ret = netlib_listen(http_listen_ip_list.GetItem(i), http_port, http_callback, NULL);
         if (ret == NETLIB_ERROR)
             return ret;
     }
-    
+
 
 			printf("server start listen on:\nFor client %s:%d\nFor MsgServer: %s:%d\nFor http:%s:%d\n",
 			client_listen_ip, client_port, msg_server_listen_ip, msg_server_port, http_listen_ip, http_port);
@@ -126,7 +126,8 @@ int main(int argc, char* argv[])
     init_http_conn();
 
 	printf("now enter the event loop...\n");
-    
+
+    // 把进程的PID写到server.pid文件里面去。。。
     writePid();
 
 	netlib_eventloop();

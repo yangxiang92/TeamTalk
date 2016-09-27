@@ -107,7 +107,7 @@ net_handle_t CBaseSocket::Connect(const char* server_ip, uint16_t port, callback
 	_SetAddr(server_ip, port, &serv_addr);
 	int ret = connect(m_socket, (sockaddr*)&serv_addr, sizeof(serv_addr));
 	if ( (ret == SOCKET_ERROR) && (!_IsBlock(_GetErrorCode())) )
-	{	
+	{
 		log("connect failed, err_code=%d", _GetErrorCode());
 		closesocket(m_socket);
 		return NETLIB_INVALID_HANDLE;
@@ -115,7 +115,7 @@ net_handle_t CBaseSocket::Connect(const char* server_ip, uint16_t port, callback
 	m_state = SOCKET_STATE_CONNECTING;
 	AddBaseSocket(this);
 	CEventDispatch::Instance()->AddEvent(m_socket, SOCKET_ALL);
-	
+
 	return (net_handle_t)m_socket;
 }
 
@@ -297,10 +297,14 @@ void CBaseSocket::_SetAddr(const char* ip, const uint16_t port, sockaddr_in* pAd
 {
 	memset(pAddr, 0, sizeof(sockaddr_in));
 	pAddr->sin_family = AF_INET;
+    // 讲端口转换为网络字节序。
 	pAddr->sin_port = htons(port);
+    // 将IP地址转换为真正的地址
 	pAddr->sin_addr.s_addr = inet_addr(ip);
 	if (pAddr->sin_addr.s_addr == INADDR_NONE)
 	{
+        // 如果解析出来的IP地址是不正常的时候
+        // 使用域名获取IP
 		hostent* host = gethostbyname(ip);
 		if (host == NULL)
 		{

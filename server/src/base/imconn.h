@@ -12,9 +12,12 @@
 #include "util.h"
 #include "ImPduBase.h"
 
+// msg server 心跳连接时间：5s
 #define SERVER_HEARTBEAT_INTERVAL	5000
+// msg server 连接超时时间：30s
 #define SERVER_TIMEOUT				30000
 #define CLIENT_HEARTBEAT_INTERVAL	30000
+// 客户端连接超时时间：120s
 #define CLIENT_TIMEOUT				120000
 #define MOBILE_CLIENT_TIMEOUT       60000 * 5
 #define READ_BUF_SIZE	2048

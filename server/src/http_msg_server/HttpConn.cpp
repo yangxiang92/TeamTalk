@@ -54,6 +54,8 @@ void httpconn_callback(void* callback_data, uint8_t msg, uint32_t handle, uint32
 	}
 }
 
+// http连接定时器回调函数
+// PS.所有的形参都没有用。。。
 void http_conn_timer_callback(void* callback_data, uint8_t msg, uint32_t handle, void* pParam)
 {
 	CHttpConn* pConn = NULL;
@@ -64,6 +66,7 @@ void http_conn_timer_callback(void* callback_data, uint8_t msg, uint32_t handle,
 		it_old = it;
 		it++;
 
+        // 仅仅检查一下连接是否超时
 		pConn = it_old->second;
 		pConn->OnTimer(cur_time);
 	}
@@ -80,7 +83,7 @@ CHttpConn::CHttpConn()
 	m_busy = false;
 	m_sock_handle = NETLIB_INVALID_HANDLE;
     m_state = CONN_STATE_IDLE;
-    
+
 	m_last_send_tick = m_last_recv_tick = get_tick_count();
 	m_conn_handle = ++g_conn_handle_generator;
 	if (m_conn_handle == 0) {
@@ -127,10 +130,10 @@ void CHttpConn::Close()
 {
     if (m_state != CONN_STATE_CLOSED) {
         m_state = CONN_STATE_CLOSED;
-        
+
         g_http_conn_map.erase(m_conn_handle);
         netlib_close(m_sock_handle);
-        
+
         ReleaseRef();
     }
 }
@@ -141,7 +144,7 @@ void CHttpConn::OnConnect(net_handle_t handle)
     m_sock_handle = handle;
     m_state = CONN_STATE_CONNECTED;
     g_http_conn_map.insert(make_pair(m_conn_handle, this));
-    
+
     netlib_option(handle, NETLIB_OPT_SET_CALLBACK, (void*)httpconn_callback);
     netlib_option(handle, NETLIB_OPT_SET_CALLBACK_DATA, reinterpret_cast<void *>(m_conn_handle) );
     netlib_option(handle, NETLIB_OPT_GET_REMOTE_IP, (void*)&m_peer_ip);
@@ -218,6 +221,7 @@ void CHttpConn::OnClose()
 
 void CHttpConn::OnTimer(uint64_t curr_tick)
 {
+    // 仅仅检查是否连接超时
 	if (curr_tick > m_last_recv_tick + HTTP_CONN_TIMEOUT) {
 		log("HttpConn timeout, handle=%d ", m_conn_handle);
 		Close();

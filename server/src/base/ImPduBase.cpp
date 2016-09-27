@@ -70,6 +70,7 @@ void CImPdu::SetFlag(uint16_t flag)
 void CImPdu::SetServiceId(uint16_t service_id)
 {
     uchar_t* buf = GetBuffer();
+    // +8 是为了干什么？？？
     CByteStream::WriteUint16(buf + 8, service_id);
 }
 
@@ -132,7 +133,7 @@ CImPdu* CImPdu::ReadPdu(uchar_t *buf, uint32_t len)
     //pPdu->_SetIncomingBuf(buf);
     pPdu->Write(buf, pdu_len);
     pPdu->ReadPduHeader(buf, IM_PDU_HEADER_LEN);
-    
+
     return pPdu;
 }
 
@@ -147,7 +148,7 @@ bool CImPdu::IsPduAvailable(uchar_t* buf, uint32_t len, uint32_t& pdu_len)
 		//log("pdu_len=%d, len=%d\n", pdu_len, len);
 		return false;
 	}
-    
+
     if(0 == pdu_len)
     {
         throw CPduException(1, "pdu_len is 0");
@@ -168,7 +169,7 @@ void CImPdu::SetPBMsg(const google::protobuf::MessageLite* msg)
     {
         log("pb msg miss required fields.");
     }
-    
+
     m_buf.Write(szData, msg_size);
     delete []szData;
     WriteHeader();

@@ -16,6 +16,7 @@ static ConnMap_t g_msg_serv_conn_map;
 static uint32_t g_total_online_user_cnt = 0;	// 并发在线总人数
 map<uint32_t, msg_serv_info_t*> g_msg_serv_info;
 
+// 定时器回调函数（定时到就会执行一次）
 void login_conn_timer_callback(void* callback_data, uint8_t msg, uint32_t handle, void* pParam)
 {
 	uint64_t cur_time = get_tick_count();
@@ -23,6 +24,8 @@ void login_conn_timer_callback(void* callback_data, uint8_t msg, uint32_t handle
 		ConnMap_t::iterator it_old = it;
 		it++;
 
+        // 更新客户端连接的定时器.
+        // 1）检测连接是否超时
 		CLoginConn* pConn = (CLoginConn*)it_old->second;
 		pConn->OnTimer(cur_time);
 	}
@@ -31,6 +34,9 @@ void login_conn_timer_callback(void* callback_data, uint8_t msg, uint32_t handle
 		ConnMap_t::iterator it_old = it;
 		it++;
 
+        // 更新msg server连接的定时器
+        // 1）发送心跳信号；
+        // 2）检测连接是否超时。
 		CLoginConn* pConn = (CLoginConn*)it_old->second;
 		pConn->OnTimer(cur_time);
 	}
@@ -97,11 +103,13 @@ void CLoginConn::OnClose()
 
 void CLoginConn::OnTimer(uint64_t curr_tick)
 {
+    // 客户端只需要看连接是否超时，不需要发送心跳信号
 	if (m_conn_type == LOGIN_CONN_TYPE_CLIENT) {
 		if (curr_tick > m_last_recv_tick + CLIENT_TIMEOUT) {
 			Close();
 		}
 	} else {
+        // msg server端需要发送心跳信号，也需要判断是否超时（互相验证）
 		if (curr_tick > m_last_send_tick + SERVER_HEARTBEAT_INTERVAL) {
             IM::Other::IMHeartBeat msg;
             CImPdu pdu;
@@ -144,7 +152,7 @@ void CLoginConn::_HandleMsgServInfo(CImPdu* pPdu)
 	msg_serv_info_t* pMsgServInfo = new msg_serv_info_t;
     IM::Server::IMMsgServInfo msg;
     msg.ParseFromArray(pPdu->GetBodyData(), pPdu->GetBodyLength());
-    
+
 	pMsgServInfo->ip_addr1 = msg.ip1();
 	pMsgServInfo->ip_addr2 = msg.ip2();
 	pMsgServInfo->port = msg.port();
