@@ -51,6 +51,7 @@ private:
 
 protected:
 	net_handle_t	m_sock_handle;
+    // 这个变量其实就是句柄（就是一个递增的数而已）
 	uint32_t		m_conn_handle;
 	bool			m_busy;
 
@@ -62,7 +63,7 @@ protected:
 
 	uint64_t		m_last_send_tick;
 	uint64_t		m_last_recv_tick;
-    
+
     CHttpParserWrapper m_cHttpParser;
 };
 

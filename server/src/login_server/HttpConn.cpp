@@ -88,7 +88,7 @@ CHttpConn::CHttpConn()
 	m_busy = false;
 	m_sock_handle = NETLIB_INVALID_HANDLE;
     m_state = CONN_STATE_IDLE;
-    
+
 	m_last_send_tick = m_last_recv_tick = get_tick_count();
 	m_conn_handle = ++g_conn_handle_generator;
 	if (m_conn_handle == 0) {
@@ -134,7 +134,7 @@ int CHttpConn::Send(void* data, int len)
 void CHttpConn::Close()
 {
     m_state = CONN_STATE_CLOSED;
-    
+
     g_http_conn_map.erase(m_conn_handle);
     netlib_close(m_sock_handle);
 
@@ -146,8 +146,9 @@ void CHttpConn::OnConnect(net_handle_t handle)
     printf("OnConnect, handle=%d\n", handle);
     m_sock_handle = handle;
     m_state = CONN_STATE_CONNECTED;
+    // 把句柄和本对象的指针
     g_http_conn_map.insert(make_pair(m_conn_handle, this));
-    
+
     netlib_option(handle, NETLIB_OPT_SET_CALLBACK, (void*)httpconn_callback);
     netlib_option(handle, NETLIB_OPT_SET_CALLBACK_DATA, reinterpret_cast<void *>(m_conn_handle) );
     netlib_option(handle, NETLIB_OPT_GET_REMOTE_IP, (void*)&m_peer_ip);
@@ -174,7 +175,7 @@ void CHttpConn::OnRead()
 	char* in_buf = (char*)m_in_buf.GetBuffer();
 	uint32_t buf_len = m_in_buf.GetWriteOffset();
 	in_buf[buf_len] = '\0';
-    
+
     // 如果buf_len 过长可能是受到攻击，则断开连接
     // 正常的url最大长度为2048，我们接受的所有数据长度不得大于1K
     if(buf_len > 1024)
@@ -186,7 +187,7 @@ void CHttpConn::OnRead()
 
 	//log("OnRead, buf_len=%u, conn_handle=%u\n", buf_len, m_conn_handle); // for debug
 
-	
+
 	m_cHttpParser.ParseHttpContent(in_buf, buf_len);
 
 	if (m_cHttpParser.IsReadAll()) {
@@ -258,7 +259,7 @@ void CHttpConn::_HandleMsgServRequest(string& url, string& post_data)
         delete [] szContent;
         return ;
     }
-    
+
     for (it = g_msg_serv_info.begin() ; it != g_msg_serv_info.end(); it++) {
         pMsgServInfo = it->second;
         if ( (pMsgServInfo->cur_conn_cnt < pMsgServInfo->max_conn_cnt) &&
@@ -267,7 +268,7 @@ void CHttpConn::_HandleMsgServRequest(string& url, string& post_data)
             min_user_cnt = pMsgServInfo->cur_conn_cnt;
         }
     }
-    
+
     if (it_min_conn == g_msg_serv_info.end()) {
         log("All TCP MsgServer are full ");
         Json::Value value;
