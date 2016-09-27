@@ -143,7 +143,7 @@ build_mysql2() {
 
 	yum -y install perl-DBI
 
-	rpm -ivh MariaDB-*
+	rpm -ivh --force MariaDB-*
 	RET=$?
 	if [ $RET -eq 0 ]; then
 		echo "install mariadb-server successed";
