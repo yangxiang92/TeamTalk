@@ -164,19 +164,23 @@ int CBaseSocket::Close()
 
 void CBaseSocket::OnRead()
 {
+    // 如果状态处于监听状态
 	if (m_state == SOCKET_STATE_LISTENING)
 	{
 		_AcceptNewSocket();
 	}
 	else
 	{
+        // 在这里调用回调函数！！！
 		u_long avail = 0;
 		if ( (ioctlsocket(m_socket, FIONREAD, &avail) == SOCKET_ERROR) || (avail == 0) )
 		{
+            // 检测到连接关闭
 			m_callback(m_callback_data, NETLIB_MSG_CLOSE, (net_handle_t)m_socket, NULL);
 		}
 		else
 		{
+            // 连接正常读取消息
 			m_callback(m_callback_data, NETLIB_MSG_READ, (net_handle_t)m_socket, NULL);
 		}
 	}
@@ -326,6 +330,8 @@ void CBaseSocket::_AcceptNewSocket()
 	char ip_str[64];
 	while ( (fd = accept(m_socket, (sockaddr*)&peer_addr, &addr_len)) != INVALID_SOCKET )
 	{
+        // 接收到新的连接之后
+        // 新建一个新的socket
 		CBaseSocket* pSocket = new CBaseSocket();
 		uint32_t ip = ntohl(peer_addr.sin_addr.s_addr);
 		uint16_t port = ntohs(peer_addr.sin_port);
@@ -335,16 +341,21 @@ void CBaseSocket::_AcceptNewSocket()
 		log("AcceptNewSocket, socket=%d from %s:%d\n", fd, ip_str, port);
 
 		pSocket->SetSocket(fd);
+        // 把当前socket的回调函数及参数赋给新的socket
 		pSocket->SetCallback(m_callback);
 		pSocket->SetCallbackData(m_callback_data);
 		pSocket->SetState(SOCKET_STATE_CONNECTED);
+        // 把连接端的IP和端口记录下来
 		pSocket->SetRemoteIP(ip_str);
 		pSocket->SetRemotePort(port);
 
 		_SetNoDelay(fd);
 		_SetNonblock(fd);
+        // 添加到已有的socket列表中
 		AddBaseSocket(pSocket);
+        // 将其添加到读和意外的事件中
 		CEventDispatch::Instance()->AddEvent(fd, SOCKET_READ | SOCKET_EXCEP);
+        // 调用一次回调函数!!!
 		m_callback(m_callback_data, NETLIB_MSG_CONNECT, (net_handle_t)fd, NULL);
 	}
 }
