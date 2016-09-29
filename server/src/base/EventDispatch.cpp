@@ -205,24 +205,29 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
 
 		for (u_int i = 0; i < read_set.fd_count; i++)
 		{
+            // 所有的读取事件
 			//log("select return read count=%d\n", read_set.fd_count);
 			SOCKET fd = read_set.fd_array[i];
 			CBaseSocket* pSocket = FindBaseSocket((net_handle_t)fd);
 			if (pSocket)
 			{
 				pSocket->OnRead();
+                // 释放引用计数（相当于智能指针释放掉一次引用）
+                // Q:为什么要这样做呢
 				pSocket->ReleaseRef();
 			}
 		}
 
 		for (u_int i = 0; i < write_set.fd_count; i++)
 		{
+            // 所有的写入事件
 			//log("select return write count=%d\n", write_set.fd_count);
 			SOCKET fd = write_set.fd_array[i];
 			CBaseSocket* pSocket = FindBaseSocket((net_handle_t)fd);
 			if (pSocket)
 			{
 				pSocket->OnWrite();
+                // 同样的需要释放引用计数
 				pSocket->ReleaseRef();
 			}
 		}
@@ -234,6 +239,7 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
 			CBaseSocket* pSocket = FindBaseSocket((net_handle_t)fd);
 			if (pSocket)
 			{
+                // 如果遇到意外，则直接关闭socket
 				pSocket->OnClose();
 				pSocket->ReleaseRef();
 			}

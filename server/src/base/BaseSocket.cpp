@@ -202,21 +202,25 @@ void CBaseSocket::OnWrite()
 #else
 		getsockopt(m_socket, SOL_SOCKET, SO_ERROR, (void*)&error, &len);
 #endif
+        // 如果处在连接状态，需要获取连接错误信息，如果连接有错误，那么连接就会关闭。
 		if (error) {
 			m_callback(m_callback_data, NETLIB_MSG_CLOSE, (net_handle_t)m_socket, NULL);
 		} else {
+            // 如果连接没有错误，那之所以会有写入时间，是因为连接确认。
 			m_state = SOCKET_STATE_CONNECTED;
 			m_callback(m_callback_data, NETLIB_MSG_CONFIRM, (net_handle_t)m_socket, NULL);
 		}
 	}
 	else
 	{
+        // 如果没有处于连接状态，那么直接写入即可
 		m_callback(m_callback_data, NETLIB_MSG_WRITE, (net_handle_t)m_socket, NULL);
 	}
 }
 
 void CBaseSocket::OnClose()
 {
+    // 关闭连接的回调时间没有什么好判断的，直接告诉回调函数是关闭状态即可。
 	m_state = SOCKET_STATE_CLOSING;
 	m_callback(m_callback_data, NETLIB_MSG_CLOSE, (net_handle_t)m_socket, NULL);
 }
