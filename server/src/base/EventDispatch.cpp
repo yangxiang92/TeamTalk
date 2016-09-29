@@ -128,7 +128,7 @@ void CEventDispatch::AddEvent(SOCKET fd, uint8_t socket_event)
 	{
 		FD_SET(fd, &m_read_set);
 	}
-		
+
 	if ((socket_event & SOCKET_WRITE) != 0)
 	{
 		FD_SET(fd, &m_write_set);
@@ -170,12 +170,13 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
     if(running)
         return;
     running = true;
-    
+
     while (running)
 	{
 		_CheckTimer();
         _CheckLoop();
 
+        // 读或者写或者意外都没有事件的时候，就直接挂起一段时间
 		if (!m_read_set.fd_count && !m_write_set.fd_count && !m_excep_set.fd_count)
 		{
 			Sleep(MIN_TIMER_DURATION);
@@ -293,7 +294,7 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
     if(running)
         return;
     running = true;
-    
+
     while (running)
 	{
 		nfds = kevent(m_kqfd, NULL, 0, events, 1024, &timeout);
@@ -359,7 +360,7 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
     if(running)
         return;
     running = true;
-    
+
 	while (running)
 	{
 		nfds = epoll_wait(m_epfd, events, 1024, wait_timeout);
@@ -369,7 +370,7 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
 			CBaseSocket* pSocket = FindBaseSocket(ev_fd);
 			if (!pSocket)
 				continue;
-            
+
             //Commit by zhfu @2015-02-28
             #ifdef EPOLLRDHUP
             if (events[i].events & EPOLLRDHUP)

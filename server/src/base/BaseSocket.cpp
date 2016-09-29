@@ -68,6 +68,8 @@ int CBaseSocket::Listen(const char* server_ip, uint16_t port, callback_t callbac
 		return NETLIB_ERROR;
 	}
 
+    // 等待socket的连接，并且设置最大连接数为64个（第二个参数）
+    // 但是请注意，真正开始接受数据包不是从这里开始，而是从accept函数开始
 	ret = listen(m_socket, 64);
 	if (ret == SOCKET_ERROR)
 	{

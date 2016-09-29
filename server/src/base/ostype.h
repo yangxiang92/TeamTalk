@@ -96,6 +96,7 @@ enum
 const uint32_t INVALID_UINT32  = (uint32_t) -1;
 const uint32_t INVALID_VALUE = 0;
 
+// 回调函数指针形式
 typedef void (*callback_t)(void* callback_data, uint8_t msg, uint32_t handle, void* pParam);
 
 #endif

@@ -106,7 +106,7 @@ build_mariadb_devel(){
         yum -y install openssl-devel
 
 
-        rpm -ivh MariaDB-*
+        rpm -ivh --force MariaDB-*
         RET=$?
         if [ $RET -eq 0 ]; then
             echo "install mariadb-devel successed";
