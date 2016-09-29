@@ -31,7 +31,7 @@ int netlib_destroy()
 }
 
 int netlib_listen(
-		const char*	server_ip, 
+		const char*	server_ip,
 		uint16_t	port,
 		callback_t	callback,
 		void*		callback_data)
@@ -47,9 +47,9 @@ int netlib_listen(
 }
 
 net_handle_t netlib_connect(
-		const char* server_ip, 
-		uint16_t	port, 
-		callback_t	callback, 
+		const char* server_ip,
+		uint16_t	port,
+		callback_t	callback,
 		void*		callback_data)
 {
 	CBaseSocket* pSocket = new CBaseSocket();
@@ -80,8 +80,12 @@ int netlib_recv(net_handle_t handle, void* buf, int len)
 	if (!pSocket)
 		return NETLIB_ERROR;
 
+    // 接收一个长度为len的数据（用TCP/IP）
 	int ret = pSocket->Recv(buf, len);
+    // 为毛又要释放引用计数。。。
+    // 因为FindBaseSocket里面增加了一次引用计数
 	pSocket->ReleaseRef();
+    // 返回接收到的数据的长度
 	return ret;
 }
 

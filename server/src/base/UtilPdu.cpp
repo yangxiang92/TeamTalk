@@ -31,6 +31,7 @@ CSimpleBuffer::~CSimpleBuffer()
 
 void CSimpleBuffer::Extend(uint32_t len)
 {
+    // 拓展到len长度
 	m_alloc_size = m_write_offset + len;
 	m_alloc_size += m_alloc_size >> 2;	// increase by 1/4 allocate size
 	uchar_t* new_buf = (uchar_t*)realloc(m_buffer, m_alloc_size);
@@ -41,14 +42,17 @@ uint32_t CSimpleBuffer::Write(void* buf, uint32_t len)
 {
 	if (m_write_offset + len > m_alloc_size)
 	{
+        // 先拓展到可以放下len长数据的长度
 		Extend(len);
 	}
 
 	if (buf)
 	{
+        // 然后将所有的buf里面的内容放到本地buffer里面
 		memcpy(m_buffer + m_write_offset, buf, len);
 	}
 
+    // 调整偏置量
 	m_write_offset += len;
 
 	return len;

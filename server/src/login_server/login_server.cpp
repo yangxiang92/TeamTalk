@@ -17,9 +17,14 @@ string strMsfsUrl;
 string strDiscovery;//发现获取地址
 void client_callback(void* callback_data, uint8_t msg, uint32_t handle, void* pParam)
 {
+    // 当有一个客户端发来连接的消息时
 	if (msg == NETLIB_MSG_CONNECT)
 	{
+        // 新建一个客户端连接的实例
 		CLoginConn* pConn = new CLoginConn();
+        // 然后以客户端登陆连接的标志调用客户端连接的处理程序
+        // 注意，这个句柄的回调函数在下面这个函数里面会被修改
+        // 从而让下一步处理可以得到运行
 		pConn->OnConnect2(handle, LOGIN_CONN_TYPE_CLIENT);
 	}
 	else

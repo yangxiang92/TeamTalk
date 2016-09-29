@@ -27,6 +27,7 @@ uchar_t* CImPdu::GetBuffer()
 
 uint32_t CImPdu::GetLength()
 {
+    // PDU的长度实际上就是Buffer的有效区域的长度
     return m_buf.GetWriteOffset();
 }
 
@@ -102,6 +103,7 @@ int CImPdu::ReadPduHeader(uchar_t* buf, uint32_t len)
 {
 	int ret = -1;
 	if (len >= IM_PDU_HEADER_LEN && buf) {
+        // 字节流
 		CByteStream is(buf, len);
 
 		is >> m_pdu_header.length;
@@ -121,19 +123,28 @@ int CImPdu::ReadPduHeader(uchar_t* buf, uint32_t len)
 CImPdu* CImPdu::ReadPdu(uchar_t *buf, uint32_t len)
 {
 	uint32_t pdu_len = 0;
+    // 检查PDU是否就绪
 	if (!IsPduAvailable(buf, len, pdu_len))
 		return NULL;
 
+    // 偏置为8的地方是service_id？？？
+    // 我擦。。。这是自己随便写的吧。。。
 	uint16_t service_id = CByteStream::ReadUint16(buf + 8);
+    // 偏执为10的地方是command_id
+    // 这应该也是自己随便写的吧。。。
 	uint16_t command_id = CByteStream::ReadUint16(buf + 10);
 	CImPdu* pPdu = NULL;
 
     pPdu = new CImPdu();
     //pPdu->_SetIncomingLen(pdu_len);
     //pPdu->_SetIncomingBuf(buf);
+    // 往PDU的Buffer里面写数据
     pPdu->Write(buf, pdu_len);
+    // PDU的Buffer里面就包括了PDU的Header
+    // 从buf开始偏置为16的地址就放着PDU的Header
     pPdu->ReadPduHeader(buf, IM_PDU_HEADER_LEN);
 
+    // 将解析好的PDU返回
     return pPdu;
 }
 
@@ -142,18 +153,23 @@ bool CImPdu::IsPduAvailable(uchar_t* buf, uint32_t len, uint32_t& pdu_len)
 	if (len < IM_PDU_HEADER_LEN)
 		return false;
 
+    // 读取网络字节流的第一个字节（注意网络字节流是大端存储的）
+    // 这个字节就是PDU的长度
 	pdu_len = CByteStream::ReadUint32(buf);
 	if (pdu_len > len)
 	{
+        // PDU的长度比Buffer的长度还长的话，显然是不行的，还需要继续接受数据才行
 		//log("pdu_len=%d, len=%d\n", pdu_len, len);
 		return false;
 	}
 
+    // 如果PDU的长度为0，那么就抛出异常
     if(0 == pdu_len)
     {
         throw CPduException(1, "pdu_len is 0");
     }
 
+    // 如果一切准备就绪，则可以开出处理PDU
 	return true;
 }
 

@@ -25,13 +25,17 @@ static CImConn* FindImConn(ConnMap_t* imconn_map, net_handle_t handle)
 
 void imconn_callback(void* callback_data, uint8_t msg, uint32_t handle, void* pParam)
 {
+    // 下面这两个宏定义纯粹是为了消除编译时的warning。。。
 	NOTUSED_ARG(handle);
 	NOTUSED_ARG(pParam);
 
+    // 为了防止后续发生错误，这里对NULL指针做一个判断
 	if (!callback_data)
 		return;
 
+    // 一般来说回调函数的数据会是连接的列表，这个列表可能是客户端的，也可能是msg_server的。
 	ConnMap_t* conn_map = (ConnMap_t*)callback_data;
+    // 在当前的连接列表中查找拥有当前回调函数句柄的连接对象。（一般都能找到的吧。。。）
 	CImConn* pConn = FindImConn(conn_map, handle);
 	if (!pConn)
 		return;
@@ -41,6 +45,7 @@ void imconn_callback(void* callback_data, uint8_t msg, uint32_t handle, void* pP
 	switch (msg)
 	{
 	case NETLIB_MSG_CONFIRM:
+        // CImConn对象的这个函数是空函数，应该是使用了多态
 		pConn->OnConfirm();
 		break;
 	case NETLIB_MSG_READ:
@@ -129,6 +134,7 @@ void CImConn::OnRead()
 			m_in_buf.Extend(READ_BUF_SIZE);
 
 		int ret = netlib_recv(m_handle, m_in_buf.GetBuffer() + m_in_buf.GetWriteOffset(), READ_BUF_SIZE);
+        // 当没有接收到数据的时候跳出循环
 		if (ret <= 0)
 			break;
 
@@ -141,13 +147,18 @@ void CImConn::OnRead()
     CImPdu* pPdu = NULL;
 	try
     {
+        // 当PDU还没有准备好的时候下面这个函数会一致返回NULL
 		while ( ( pPdu = CImPdu::ReadPdu(m_in_buf.GetBuffer(), m_in_buf.GetWriteOffset()) ) )
 		{
             uint32_t pdu_len = pPdu->GetLength();
-            
+
+            // 也是定义成了虚函数：多态
 			HandlePdu(pPdu);
 
+            // 将PDU的Buffer的偏置指针置为0
+            // 但是这种写法真的好么。。。
 			m_in_buf.Read(NULL, pdu_len);
+            // 处理完了之后就可以删除PDU啦~
 			delete pPdu;
             pPdu = NULL;
 //			++g_recv_pkt_cnt;
@@ -159,6 +170,7 @@ void CImConn::OnRead()
             delete pPdu;
             pPdu = NULL;
         }
+        // 出错了之后记得关掉连接
         OnClose();
 	}
 }

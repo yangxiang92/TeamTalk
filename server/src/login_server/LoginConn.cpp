@@ -85,14 +85,18 @@ void CLoginConn::OnConnect2(net_handle_t handle, int conn_type)
 {
 	m_handle = handle;
 	m_conn_type = conn_type;
+    // 连接连接类型为conn_map分配合适的指针
 	ConnMap_t* conn_map = &g_msg_serv_conn_map;
 	if (conn_type == LOGIN_CONN_TYPE_CLIENT) {
 		conn_map = &g_client_conn_map;
 	}else
 
+    // 为客户端连接或者是msg_server连接添加已连接的对象
 	conn_map->insert(make_pair(handle, this));
 
+    // 然后再将这个连接的回调函数重置为imconn_callback
 	netlib_option(handle, NETLIB_OPT_SET_CALLBACK, (void*)imconn_callback);
+    // 把客户端连接的列表作为回调函数的数据交给回调函数
 	netlib_option(handle, NETLIB_OPT_SET_CALLBACK_DATA, (void*)conn_map);
 }
 
