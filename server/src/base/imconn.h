@@ -29,9 +29,13 @@ public:
 	virtual ~CImConn();
 
 	bool IsBusy() { return m_busy; }
+    // 发送PDU
+    // 真正发送数据的地方
+    // 所有数据都是以PDU的形式发送的
 	int SendPdu(CImPdu* pPdu) { return Send(pPdu->GetBuffer(), pPdu->GetLength()); }
 	int Send(void* data, int len);
 
+    // 都是虚函数，都是要多态的。。。
 	virtual void OnConnect(net_handle_t handle) { m_handle = handle; }
 	virtual void OnConfirm() {}
 	virtual void OnRead();

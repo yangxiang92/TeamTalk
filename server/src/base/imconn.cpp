@@ -36,6 +36,7 @@ void imconn_callback(void* callback_data, uint8_t msg, uint32_t handle, void* pP
     // 一般来说回调函数的数据会是连接的列表，这个列表可能是客户端的，也可能是msg_server的。
 	ConnMap_t* conn_map = (ConnMap_t*)callback_data;
     // 在当前的连接列表中查找拥有当前回调函数句柄的连接对象。（一般都能找到的吧。。。）
+    // 注意，这里面保存的指针都是子类的指针，所以返回回来的时候都是可以进行多态的对象
 	CImConn* pConn = FindImConn(conn_map, handle);
 	if (!pConn)
 		return;
@@ -44,17 +45,22 @@ void imconn_callback(void* callback_data, uint8_t msg, uint32_t handle, void* pP
 
 	switch (msg)
 	{
+    // 这里全部都是多态！！！
+    //
 	case NETLIB_MSG_CONFIRM:
         // CImConn对象的这个函数是空函数，应该是使用了多态
 		pConn->OnConfirm();
 		break;
 	case NETLIB_MSG_READ:
+        // 这个函数虽然被定义成了虚函数的形式，但是好像一般还是用父类（CImConn）的实现
 		pConn->OnRead();
 		break;
 	case NETLIB_MSG_WRITE:
+        // 这个函数好像一般也是用父类（CImConn）的实现
 		pConn->OnWrite();
 		break;
 	case NETLIB_MSG_CLOSE:
+        // 又是一个没有实现的虚函数
 		pConn->OnClose();
 		break;
 	default:
@@ -125,6 +131,7 @@ int CImConn::Send(void* data, int len)
 	return len;
 }
 
+// 有时候子类不需要重载这个函数，因为读的话都是直接读入到buffer里面，是没有差别的
 void CImConn::OnRead()
 {
 	for (;;)
@@ -153,6 +160,7 @@ void CImConn::OnRead()
             uint32_t pdu_len = pPdu->GetLength();
 
             // 也是定义成了虚函数：多态
+            // 主要由子类去实现这个里面的功能
 			HandlePdu(pPdu);
 
             // 将PDU的Buffer的偏置指针置为0
@@ -175,6 +183,7 @@ void CImConn::OnRead()
 	}
 }
 
+// 这个部分子类一般也不需要重载，因为直接是把Buffer里面的数据发出去而已
 void CImConn::OnWrite()
 {
 	if (!m_busy)
@@ -182,20 +191,28 @@ void CImConn::OnWrite()
 
 	while (m_out_buf.GetWriteOffset() > 0) {
 		int send_size = m_out_buf.GetWriteOffset();
+        // 尽量发送Buf内所有的字节，
+        // 如果比网络库规定的最大的发送大小还要大的话就限制住它
 		if (send_size > NETLIB_MAX_SOCKET_BUF_SIZE) {
 			send_size = NETLIB_MAX_SOCKET_BUF_SIZE;
 		}
 
+        // 返回的是发送出去的字节数
 		int ret = netlib_send(m_handle, m_out_buf.GetBuffer(), send_size);
+        // 如果没有发送出去，就退出循环
+        // 也就是说现在系统处于忙的状态，所以需要退出循环
+        // 同时待会还会置这个连接的状态为忙状态
 		if (ret <= 0) {
 			ret = 0;
 			break;
 		}
 
+        // 把有效Buf的大小减小
 		m_out_buf.Read(NULL, ret);
 	}
 
 	if (m_out_buf.GetWriteOffset() == 0) {
+        // 如果还有数据没发出去但是又退出了循环，那就是处于忙状态了。
 		m_busy = false;
 	}
 

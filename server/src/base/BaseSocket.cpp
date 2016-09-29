@@ -16,6 +16,7 @@ void RemoveBaseSocket(CBaseSocket* pSocket)
 
 CBaseSocket* FindBaseSocket(net_handle_t fd)
 {
+    // 这个函数似乎被频繁的调用到了，如果每次都这样查找是不是会影响性能。。。
 	CBaseSocket* pSocket = NULL;
 	SocketMap::iterator iter = g_socket_map.find(fd);
 	if (iter != g_socket_map.end())
@@ -126,10 +127,13 @@ int CBaseSocket::Send(void* buf, int len)
 	if (m_state != SOCKET_STATE_CONNECTED)
 		return NETLIB_ERROR;
 
+    // 直接把数据发出去就可以了
 	int ret = send(m_socket, (char*)buf, len, 0);
 	if (ret == SOCKET_ERROR)
 	{
 		int err_code = _GetErrorCode();
+        // 上面的函数返回的错误代码永远是没有错误的呀（Linux下）
+        // 如果是阻塞错误的话，就把这个时间重新插入到待处理事件中
 		if (_IsBlock(err_code))
 		{
 #if ((defined _WIN32) || (defined __APPLE__))
@@ -256,6 +260,7 @@ int CBaseSocket::_GetErrorCode()
 #ifdef _WIN32
 	return WSAGetLastError();
 #else
+    // 在Linux下面直接就没错
 	return errno;
 #endif
 }

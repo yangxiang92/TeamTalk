@@ -189,6 +189,7 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
 		memcpy(&excep_set, &m_excep_set, sizeof(fd_set));
 		m_lock.unlock();
 
+        // 每隔10ms获取一次连接的事件
 		int nfds = select(0, &read_set, &write_set, &excep_set, &timeout);
 
 		if (nfds == SOCKET_ERROR)
@@ -198,6 +199,7 @@ void CEventDispatch::StartDispatch(uint32_t wait_timeout)
 			continue;			// select again
 		}
 
+        // 如果连接的事件为0的话，直接再次等待
 		if (nfds == 0)
 		{
 			continue;

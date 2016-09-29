@@ -40,7 +40,9 @@ void msg_serv_callback(void* callback_data, uint8_t msg, uint32_t handle, void* 
 
 	if (msg == NETLIB_MSG_CONNECT)
 	{
+        // 新建一个LoginServer的实例
 		CLoginConn* pConn = new CLoginConn();
+        // 然后给他传入一个MSG_SERVER的参数
 		pConn->OnConnect2(handle, LOGIN_CONN_TYPE_MSG_SERV);
 	}
 	else

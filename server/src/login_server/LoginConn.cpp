@@ -61,18 +61,24 @@ void CLoginConn::Close()
 	if (m_handle != NETLIB_INVALID_HANDLE) {
 		netlib_close(m_handle);
 		if (m_conn_type == LOGIN_CONN_TYPE_CLIENT) {
+            // 如果是客户端连接关闭，直接删掉这个连接的句柄就可以了
 			g_client_conn_map.erase(m_handle);
 		} else {
+            // 如果是msg_server的连接
 			g_msg_serv_conn_map.erase(m_handle);
 
 			// remove all user count from this message server
 			map<uint32_t, msg_serv_info_t*>::iterator it = g_msg_serv_info.find(m_handle);
 			if (it != g_msg_serv_info.end()) {
+                // 把msg_server的信息读出来
 				msg_serv_info_t* pMsgServInfo = it->second;
 
+                // 减掉现在记录上的用户
 				g_total_online_user_cnt -= pMsgServInfo->cur_conn_cnt;
 				log("onclose from MsgServer: %s:%u ", pMsgServInfo->hostname.c_str(), pMsgServInfo->port);
+                // 在这儿释放内存么。。。
 				delete pMsgServInfo;
+                // 在表中删除该msg_server
 				g_msg_serv_info.erase(it);
 			}
 		}

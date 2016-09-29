@@ -64,12 +64,14 @@ net_handle_t netlib_connect(
 
 int netlib_send(net_handle_t handle, void* buf, int len)
 {
+    // 根据句柄找到Socket。
 	CBaseSocket* pSocket = FindBaseSocket(handle);
 	if (!pSocket)
 	{
 		return NETLIB_ERROR;
 	}
 	int ret = pSocket->Send(buf, len);
+    // 这个引用计数我实在是不太懂为什么要这样干。。。
 	pSocket->ReleaseRef();
 	return ret;
 }

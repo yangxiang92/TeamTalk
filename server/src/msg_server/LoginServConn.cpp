@@ -128,11 +128,13 @@ void CLoginServConn::OnConfirm()
 
 	uint32_t cur_conn_cnt = 0;
 	uint32_t shop_user_cnt = 0;
-    
+
     list<user_conn_t> user_conn_list;
     CImUserManager::GetInstance()->GetUserConnCnt(&user_conn_list, cur_conn_cnt);
 	char hostname[256] = {0};
+    // 获取主机名字
 	gethostname(hostname, 256);
+    // Protobuf的包
     IM::Server::IMMsgServInfo msg;
     msg.set_ip1(g_msg_server_ip_addr1);
     msg.set_ip2(g_msg_server_ip_addr2);

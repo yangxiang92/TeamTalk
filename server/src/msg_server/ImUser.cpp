@@ -38,7 +38,7 @@ CMsgConn* CImUser::GetUnValidateMsgConn(uint32_t handle)
             return pConn;
         }
     }
-    
+
     return NULL;
 }
 
@@ -64,12 +64,13 @@ user_conn_t CImUser::GetUserConn()
     uint32_t conn_cnt = 0;
     for (map<uint32_t, CMsgConn*>::iterator it = m_conn_map.begin(); it != m_conn_map.end(); it++)
     {
+        // 统计单个用户连接的数量
         CMsgConn* pConn = it->second;
         if (pConn->IsOpen()) {
             conn_cnt++;
         }
     }
-    
+
     user_conn_t user_cnt = {m_user_id, conn_cnt};
     return user_cnt;
 }
@@ -127,10 +128,10 @@ void CImUser::BroadcastData(void *buff, uint32_t len, CMsgConn* pFromConn)
     for (map<uint32_t, CMsgConn*>::iterator it = m_conn_map.begin(); it != m_conn_map.end(); it++)
     {
         CMsgConn* pConn = it->second;
-        
+
         if(pConn == NULL)
             continue;
-        
+
         if (pConn != pFromConn) {
             pConn->Send(buff, len);
         }
@@ -164,7 +165,7 @@ bool CImUser::KickOutSameClientType(uint32_t client_type, uint32_t reason, CMsgC
     for (map<uint32_t, CMsgConn*>::iterator it = m_conn_map.begin(); it != m_conn_map.end(); it++)
     {
         CMsgConn* pMsgConn = it->second;
-        
+
         //16进制位移计算
         if ((((pMsgConn->GetClientType() ^ client_type) >> 4) == 0) && (pMsgConn != pFromConn)) {
             HandleKickUser(pMsgConn, reason);
@@ -324,8 +325,10 @@ void CImUserManager::GetUserConnCnt(list<user_conn_t>* user_conn_list, uint32_t&
         pImUser = (CImUser*)it->second;
         if (pImUser->IsValidate())
         {
+            // 获取单个用户连接的数量
             user_conn_t user_conn_cnt = pImUser->GetUserConn();
             user_conn_list->push_back(user_conn_cnt);
+            // 统计总共的连接数
             total_conn_cnt += user_conn_cnt.conn_cnt;
         }
     }

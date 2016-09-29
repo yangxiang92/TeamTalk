@@ -71,13 +71,14 @@ void CImPdu::SetFlag(uint16_t flag)
 void CImPdu::SetServiceId(uint16_t service_id)
 {
     uchar_t* buf = GetBuffer();
-    // +8 是为了干什么？？？
+    // service_id的偏置量为8
     CByteStream::WriteUint16(buf + 8, service_id);
 }
 
 void CImPdu::SetCommandId(uint16_t command_id)
 {
     uchar_t* buf = GetBuffer();
+    // command_id的偏置量为10
     CByteStream::WriteUint16(buf + 10, command_id);
 }
 
@@ -177,17 +178,21 @@ void CImPdu::SetPBMsg(const google::protobuf::MessageLite* msg)
 {
     //设置包体，则需要重置下空间
     m_buf.Read(NULL, m_buf.GetWriteOffset());
+    // 预留出头的空间
     m_buf.Write(NULL, sizeof(PduHeader_t));
     uint32_t msg_size = msg->ByteSize();
     uchar_t* szData = new uchar_t[msg_size];
     //ALLOC_FAIL_ASSERT(szData)
+    // 调用protobuf的序列化功能
     if (!msg->SerializeToArray(szData, msg_size))
     {
         log("pb msg miss required fields.");
     }
 
+    // 把序列化出来的字节写入到buffer中头的后面的部分区
     m_buf.Write(szData, msg_size);
     delete []szData;
+    // 写入PDU的头
     WriteHeader();
 }
 
